@@ -1,0 +1,99 @@
+/---------------/
+・デバック
+pry-byebug - 特定位置で処理を止めて変数の中身を確認したり、変数の値を変えたりする
+
+Gemfileの[group development]に[gem pry-byebug]を追記
+dockerをビルドしなおせばgemのインストールができる
+$ docker-compose build
+$ docker-compose up -d
+
+/---------------/
+・コンテナにアタッチする
+コンテナ名確認
+$ docker-compose ps
+NAMEをコピー
+$ docker attach [確認したNAME]
+プログラムの止めたい位置で[binding.pry]を追記して処理を実行
+
+/---------------/
+・アタッチから抜ける
+Control+p+q
+終わった後に消しわすれないようにする
+
+/---------------/
+・フラッシュ
+flash[:notice]
+参照されるまでSESSIONに保存される
+無ければnilになる
+あくまでも一時的な保存
+
+
+/---------------/
+・バリデーション
+モデルに書く
+class Board < ApplicationRecord
+  validates :name, presence: true, length: { maximum: 10 }
+end
+
+presence => 必須
+length{ maximum: 10 } => 最大文字数
+
+
+/---------------/
+・モデルの上部にテーブル構造記載
+Gemfileのdevelopmentに
+[gem 'annotate']を追記して
+ビルド・再起動してanotateのインストール
+//anotate実行
+docker-compose exec web bundle exec annotate
+//migrate実行時勝手にanotateの設定
+docker-compose exec web bundle exec rails g annotate:install
+
+
+
+/---------------/
+・マイグレーションファイル作成コマンド
+$ docker-compose run web bundle exec rails g model comment board:references name:string comment:text
+
+model comment => commentsテーブルとcommentモデルが作成される
+board:references => referencesは外部キーとの紐付け（board_idカラムが作成される）
+
+referencesの元テーブル（1:N の1のテーブル）に
+has_many :comments
+を追記
+
+/---------------/
+・マイグレーションファイル
+ t.references :board, foreign_key: true
+
+foreign_key: true => 外部きー制約
+存在しないboardのidが入ったりするとデータ不整合を防止
+
+
+
+/---------------/
+・マイグレーション実行コマンド
+ docker-compose exec web bundle exec rake db:migrate
+
+/---------------/
+・コントローラー作成(viewも勝手に作られる)
+docker-compose exec web rails g controller [controller_name]
+
+
+/---------------/
+・DB接続
+docker-compose exec db bash
+mysql -h db -u root -p
+
+
+
+/---------------/
+・ルーティング確認
+docker-compose exec web bash
+bundle exec rake routes
+
+
+/---------------/
+heroku
+k.kumagai0330@gmail.com
+Udejiman123!
